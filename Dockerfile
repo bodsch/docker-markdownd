@@ -66,8 +66,6 @@ RUN \
     /tmp/* \
     /var/cache/apk/*
 
-COPY rootfs/ /
-
 VOLUME [ "/markdownd", "/data" ]
 
 WORKDIR /markdownd

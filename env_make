@@ -2,7 +2,7 @@ PORTS = \
   --publish 8080:8080
 
 VOLUMES = \
-  --volume $PWD:/data
+  --volume `pwd`:/data
 
 ENV = \
   --env VAR="value"
