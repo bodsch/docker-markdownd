@@ -1,10 +1,8 @@
 
-FROM golang:1.10.0-alpine3.7 as builder
+FROM golang:1-alpine as builder
 
-ENV \
-  TERM=xterm \
-  BUILD_DATE="2018-03-19" \
-  TZ='Europe/Berlin'
+ARG BUILD_DATE
+ARG BUILD_VERSION
 
 # ---------------------------------------------------------------------------------------
 
@@ -14,11 +12,8 @@ RUN \
   apk update --no-cache && \
   apk upgrade --no-cache && \
   apk add \
-    ca-certificates curl g++ git make python libuv nodejs nodejs-npm tzdata && \
-  cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
-  echo ${TZ} > /etc/timezone && \
-  echo "export TZ=${TZ}" > /etc/enviroment && \
-  echo "export BUILD_DATE=${BUILD_DATE}" >> /etc/enviroment
+    ca-certificates curl g++ git make python libuv nodejs nodejs-npm && \
+  echo "export BUILD_DATE=${BUILD_DATE}" > /etc/enviroment
 
 RUN \
   export GOPATH=/opt/go && \
@@ -28,6 +23,8 @@ RUN \
   export GOMAXPROCS=4 && \
   export GOARCH=amd64 && \
   cd ${GOPATH}/src/github.com/aerth/markdownd && \
+  version=$(git describe --tags --always | sed 's/^v//') && \
+  echo "build version: ${version}" && \
   ls -1 && \
   /bin/sh ./build.sh && \
   mv markdownd /tmp/markdownd/ && \
@@ -39,12 +36,12 @@ CMD [ "/bin/sh" ]
 
 # ---------------------------------------------------------------------------------------
 
-FROM alpine:3.7
+FROM alpine:latest
 
 EXPOSE 8080
 
 LABEL \
-  version="1803" \
+  version="${BUILD_VERSION}" \
   maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="markdownd Docker Image" \
@@ -60,8 +57,14 @@ COPY --from=builder /etc/enviroment /etc/enviroment
 COPY --from=builder /tmp/markdownd/ /markdownd
 
 RUN \
-  apk --quiet --no-cache update && \
+  export TZ='Europe/Berlin' && \
+  apk update --quiet --no-cache update && \
+  apk add --quiet --no-cache --virtual .build-deps \
+    tzdata && \
+  cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
+  echo ${TZ} > /etc/timezone && \
   if [ -f /etc/enviroment ] ; then . /etc/enviroment; fi && \
+  apk del --quiet .build-deps && \
   rm -rf \
     /tmp/* \
     /var/cache/apk/*

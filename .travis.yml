@@ -3,17 +3,36 @@ sudo: required
 services:
   - docker
 
-install:
-  - docker build --tag bodsch/docker-markdownd .
-  - docker run --detach --name markdownd bodsch/docker-markdownd
+env:
+  global:
+    - BUILD_DATE=$(date +"%Y-%m-%d")
+    - BUILD_VERSION=$(date +"%y%m")
 
-script:
-  - docker ps | grep -q markdownd
+jobs:
+  include:
+    - stage: build, test and push docker image
+      script:
+        - make
+        - make start
+        - docker ps | grep -q markdownd
+        - make stop
+        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+        - docker push ${DOCKER_USERNAME}/docker-markdownd:${BUILD_VERSION}
+        - docker tag ${DOCKER_USERNAME}/docker-markdownd:${BUILD_VERSION} ${DOCKER_USERNAME}/docker-markdownd:latest
+        - docker push ${DOCKER_USERNAME}/docker-markdownd:latest
 
-after_success:
-  - |
-    [ "${TRAVIS_BRANCH}" == "master" ] && curl \
-      --request POST \
-      --header "Content-Type: application/json"  \
-      --data '{"source_type":"Branch","source_name":"master"}' \
-      https://registry.hub.docker.com/u/bodsch/docker-markdownd/trigger/${DOCKER_HUB_TOKEN}/
+
+#install:
+  #- docker build --tag bodsch/docker-markdownd .
+  #- docker run --detach --name markdownd bodsch/docker-markdownd
+
+#script:
+  #- docker ps | grep -q markdownd
+
+#after_success:
+  #- |
+    #[ "${TRAVIS_BRANCH}" == "master" ] && curl \
+      #--request POST \
+      #--header "Content-Type: application/json"  \
+      #--data '{"source_type":"Branch","source_name":"master"}' \
+      #https://registry.hub.docker.com/u/bodsch/docker-markdownd/trigger/${DOCKER_HUB_TOKEN}/
