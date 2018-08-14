@@ -34,24 +34,9 @@ CMD [ "/bin/sh" ]
 
 # ---------------------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------------------
-
-FROM alpine:latest
+FROM alpine:3.8
 
 EXPOSE 8080
-
-LABEL \
-  version="${BUILD_VERSION}" \
-  maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
-  org.label-schema.build-date=${BUILD_DATE} \
-  org.label-schema.name="markdownd Docker Image" \
-  org.label-schema.description="Inofficial markdownd Docker Image" \
-  org.label-schema.url="https://markdownd.herokuapp.com/" \
-  org.label-schema.vcs-url="https://github.com/bodsch/docker-markdownd" \
-  org.label-schema.vendor="Bodo Schulz" \
-  org.label-schema.schema-version="1.0" \
-  com.microscaling.docker.dockerfile="/Dockerfile" \
-  com.microscaling.license="MIT License"
 
 COPY --from=builder /etc/enviroment /etc/enviroment
 COPY --from=builder /tmp/markdownd/ /markdownd
@@ -76,3 +61,20 @@ WORKDIR /markdownd
 ENTRYPOINT [ "/markdownd/markdownd" ]
 
 CMD [ "-toc", "-footer", "/data/themes/footer.html", "-header", "/data/themes/header.html", "-index", "index.md", "/data" ]
+
+# ---------------------------------------------------------------------------------------
+
+LABEL \
+  version="${BUILD_VERSION}" \
+  maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
+  org.label-schema.build-date=${BUILD_DATE} \
+  org.label-schema.name="markdownd Docker Image" \
+  org.label-schema.description="Inofficial markdownd Docker Image" \
+  org.label-schema.url="https://markdownd.herokuapp.com/" \
+  org.label-schema.vcs-url="https://github.com/bodsch/docker-markdownd" \
+  org.label-schema.vendor="Bodo Schulz" \
+  org.label-schema.schema-version="1.0" \
+  com.microscaling.docker.dockerfile="/Dockerfile" \
+  com.microscaling.license="MIT License"
+
+# ---------------------------------------------------------------------------------------
